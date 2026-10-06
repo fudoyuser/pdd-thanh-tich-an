@@ -222,14 +222,14 @@
 
   const total = FIELDS.reduce((s, f) => s + f.items.length, 0);
   const unlocked = FIELDS.filter(f => f.items.length).length;
-  const top = FIELDS.reduce((a, b) => b.items.length > a.items.length ? b : a);
+  const best = FIELDS.reduce((a, b) => b.items.length > a.items.length ? b : a);
   const pct = Math.round(unlocked / FIELDS.length * 100);
 
   document.getElementById("stats").innerHTML = `
     <div class="stat"><div class="num">${total}</div><div class="lbl">Thành tích đã mở khóa</div></div>
     <div class="stat"><div class="num">${unlocked}/${FIELDS.length}</div><div class="lbl">Lĩnh vực có thành tích</div>
       <div class="progress"><span style="width:${pct}%"></span></div></div>
-    <div class="stat"><div class="num">${top.icon}</div><div class="lbl">Mạnh nhất: ${esc(top.name)} (${top.items.length})</div></div>`;
+    <div class="stat"><div class="num">${best.icon}</div><div class="lbl">Mạnh nhất: ${esc(best.name)} (${best.items.length})</div></div>`;
 
   const grid = document.getElementById("grid");
   const filters = document.getElementById("filters");
