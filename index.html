@@ -1,0 +1,257 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Thống kê thành tích ẩn của PDD</title>
+<meta name="description" content="Bảng thống kê những thành tích ẩn mà PDD đã mở khóa theo từng lĩnh vực.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #f6f4ef;
+    --surface: #ffffff;
+    --surface-2: #f0ede6;
+    --text: #1c1b19;
+    --muted: #6b675f;
+    --line: #e2ddd2;
+    --accent: #c2410c;
+    --accent-soft: #fdeee4;
+    --gold: #a16207;
+    --gold-soft: #fbf3dc;
+    --locked: #a8a29e;
+    --shadow: 0 1px 2px rgba(28,27,25,.05), 0 4px 16px rgba(28,27,25,.05);
+    color-scheme: light;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #141312;
+      --surface: #1d1c1a;
+      --surface-2: #262421;
+      --text: #f2efe9;
+      --muted: #a39e94;
+      --line: #34312c;
+      --accent: #fb923c;
+      --accent-soft: #3a2416;
+      --gold: #facc15;
+      --gold-soft: #332b10;
+      --locked: #6b665f;
+      --shadow: none;
+      color-scheme: dark;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: "Be Vietnam Pro", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    font-size: 15px;
+    line-height: 1.55;
+    padding: 0 16px;
+  }
+  .wrap { max-width: 1040px; margin: 0 auto; padding-block: 56px 72px; }
+
+  header .eyebrow {
+    display: inline-flex; align-items: center; gap: 8px;
+    font-size: 12px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase;
+    color: var(--accent); background: var(--accent-soft);
+    padding: 5px 12px; border-radius: 999px;
+  }
+  h1 {
+    font-size: clamp(30px, 5.5vw, 52px);
+    line-height: 1.12; font-weight: 800; letter-spacing: -.02em;
+    margin: 18px 0 12px;
+  }
+  h1 .hl { color: var(--accent); }
+  .lede { color: var(--muted); font-size: 17px; max-width: 620px; margin: 0; }
+
+  .stats {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 12px; margin: 36px 0 28px;
+  }
+  .stat {
+    background: var(--surface); border: 1px solid var(--line); border-radius: 14px;
+    padding: 18px 20px; box-shadow: var(--shadow);
+  }
+  .stat .num { font-size: 34px; font-weight: 800; line-height: 1; font-variant-numeric: tabular-nums; }
+  .stat .lbl { color: var(--muted); font-size: 13px; margin-top: 8px; }
+  .progress { height: 6px; background: var(--surface-2); border-radius: 99px; margin-top: 12px; overflow: hidden; }
+  .progress > span { display: block; height: 100%; background: var(--accent); border-radius: 99px; }
+
+  .filters { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 24px; }
+  .chip {
+    font: inherit; font-size: 13px; font-weight: 500;
+    border: 1px solid var(--line); background: var(--surface); color: var(--text);
+    padding: 7px 14px; border-radius: 999px; cursor: pointer;
+  }
+  .chip:hover { border-color: var(--accent); }
+  .chip[aria-pressed="true"] { background: var(--text); color: var(--bg); border-color: var(--text); }
+
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 320px), 1fr)); gap: 16px; }
+  .card {
+    background: var(--surface); border: 1px solid var(--line); border-radius: 16px;
+    padding: 22px; box-shadow: var(--shadow);
+    display: flex; flex-direction: column;
+  }
+  .card-head { display: flex; align-items: center; gap: 14px; margin-bottom: 16px; }
+  .icon {
+    width: 44px; height: 44px; flex: none; border-radius: 12px;
+    display: grid; place-items: center; font-size: 22px;
+    background: var(--gold-soft);
+  }
+  .card h2 { font-size: 16px; font-weight: 700; margin: 0; line-height: 1.3; }
+  .card .count { font-size: 12.5px; color: var(--muted); margin-top: 2px; }
+
+  ul.ach { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+  ul.ach li {
+    display: flex; gap: 10px; align-items: flex-start;
+    background: var(--surface-2); border-radius: 10px; padding: 10px 12px;
+  }
+  ul.ach li .tick {
+    flex: none; width: 20px; height: 20px; border-radius: 50%; margin-top: 1px;
+    background: var(--gold); color: var(--surface);
+    display: grid; place-items: center; font-size: 11px; font-weight: 800;
+  }
+  .ach-body { min-width: 0; }
+  .tag {
+    display: inline-block; font-size: 11.5px; font-weight: 600;
+    color: var(--accent); background: var(--accent-soft);
+    padding: 1px 8px; border-radius: 6px; margin-right: 6px; margin-bottom: 2px;
+  }
+  .score { font-weight: 700; color: var(--gold); white-space: nowrap; }
+
+  .card.locked { border-style: dashed; box-shadow: none; background: transparent; }
+  .card.locked .icon { background: var(--surface-2); filter: grayscale(1); opacity: .6; }
+  .card.locked h2 { color: var(--muted); }
+  .locked-msg {
+    color: var(--locked); font-size: 14px; display: flex; align-items: center; gap: 8px;
+    padding: 14px; border-radius: 10px; border: 1px dashed var(--line);
+  }
+
+  footer { margin-top: 48px; color: var(--muted); font-size: 13px; text-align: center; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <span class="eyebrow">🏆 Hồ sơ thành tích</span>
+    <h1>Thống kê thành tích ẩn của <span class="hl">PDD</span></h1>
+    <p class="lede">Những thành tích nhỏ, không ai trao huy chương, nhưng đã được mở khóa từng cái một.</p>
+  </header>
+
+  <section class="stats" id="stats" aria-label="Tổng quan"></section>
+  <nav class="filters" id="filters" aria-label="Lọc theo lĩnh vực"></nav>
+  <main class="grid" id="grid"></main>
+
+  <footer>Cập nhật lần cuối: <span id="updated"></span></footer>
+</div>
+
+<script>
+  const UPDATED = "07/10/2026";
+
+  const FIELDS = [
+    { name: "Quản lý đội nhóm", icon: "👥", items: [
+      "Đã có khả năng load nhiều công việc cùng lúc",
+      "Khả năng quản lý cảm xúc trong nhiều công việc phức tạp",
+    ]},
+    { name: "Nghiên cứu khoa học", icon: "🔬", items: [
+      "Hiểu sơ sơ | Lý thuyết TPB",
+      "Hiểu sơ sơ | Lý thuyết TAM",
+      "Hiểu sơ sơ | Lý thuyết UTAUT",
+      "Hiểu sơ sơ | Lý thuyết SOR",
+      "Hiểu sơ sơ | Lý thuyết TOE",
+      "Đã hiểu cách sử dụng Google App Script để xử lý data",
+      "Đã hiểu cách sử dụng Claude để chạy data của phần mềm Stata",
+      "Đã biết cách tư duy khoa học cho nhiều vấn đề hơn",
+    ]},
+    { name: "Tài chính & Ngân hàng & Chứng khoán", icon: "💹", items: [
+      "2 Video | Kênh Youtube: Tài chính & Kinh doanh",
+      "1 Video | Kênh Youtube: Mèo Giải Thích",
+      "2 bài tập giả định | Giáo trình: Quản trị rủi ro",
+      "Mức độ thấu hiểu công thức CAPM: 2 điểm",
+    ]},
+    { name: "Bất động sản", icon: "🏠", items: [
+      "Đã trải nghiệm 3 doanh nghiệp môi giới bất động sản",
+    ]},
+    { name: "Tiếng Anh", icon: "🔤", items: [] },
+    { name: "HR", icon: "🧑‍💼", items: [
+      "Đã trải nghiệm vị trí nhân sự của 1 doanh nghiệp nhỏ về lĩnh vực giặt là",
+    ]},
+    { name: "Phim ảnh", icon: "🎬", items: [
+      "Hiểu sơ sơ và xem hết | Squid Game phần 1",
+    ]},
+    { name: "Ý tưởng khởi nghiệp", icon: "💡", items: [
+      "Hiểu sơ sơ | CBAM",
+    ]},
+    { name: "TG", icon: "🌐", items: [
+      "Hiểu sơ sơ",
+    ]},
+    { name: "Tập trung sâu trong hỗn loạn nhiệm vụ", icon: "🎯", items: [
+      "Điểm lấy sự tập trung nhanh chóng: 1 điểm",
+    ]},
+  ];
+
+  const esc = s => s.replace(/[&<>"']/g, c => ({ "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#39;" }[c]));
+
+  // "Tag | Nội dung" -> nhãn + nội dung; "...: N điểm" -> làm nổi bật điểm
+  function renderItem(text) {
+    let html;
+    const pipe = text.indexOf("|");
+    if (pipe > -1) {
+      html = `<span class="tag">${esc(text.slice(0, pipe).trim())}</span>${esc(text.slice(pipe + 1).trim())}`;
+    } else {
+      const m = text.match(/^(.*):\s*(\d+\s*điểm)$/);
+      html = m ? `${esc(m[1])}: <span class="score">${esc(m[2])}</span>` : esc(text);
+    }
+    return `<li><span class="tick" aria-hidden="true">✓</span><span class="ach-body">${html}</span></li>`;
+  }
+
+  function renderCard(f) {
+    const n = f.items.length;
+    const body = n
+      ? `<ul class="ach">${f.items.map(renderItem).join("")}</ul>`
+      : `<div class="locked-msg">🔒 Chưa mở khóa thành tích nào</div>`;
+    return `<article class="card${n ? "" : " locked"}">
+      <div class="card-head">
+        <div class="icon" aria-hidden="true">${f.icon}</div>
+        <div><h2>${esc(f.name)}</h2><div class="count">${n ? n + " thành tích" : "Đang chờ mở khóa"}</div></div>
+      </div>${body}</article>`;
+  }
+
+  const total = FIELDS.reduce((s, f) => s + f.items.length, 0);
+  const unlocked = FIELDS.filter(f => f.items.length).length;
+  const top = FIELDS.reduce((a, b) => b.items.length > a.items.length ? b : a);
+  const pct = Math.round(unlocked / FIELDS.length * 100);
+
+  document.getElementById("stats").innerHTML = `
+    <div class="stat"><div class="num">${total}</div><div class="lbl">Thành tích đã mở khóa</div></div>
+    <div class="stat"><div class="num">${unlocked}/${FIELDS.length}</div><div class="lbl">Lĩnh vực có thành tích</div>
+      <div class="progress"><span style="width:${pct}%"></span></div></div>
+    <div class="stat"><div class="num">${top.icon}</div><div class="lbl">Mạnh nhất: ${esc(top.name)} (${top.items.length})</div></div>`;
+
+  const grid = document.getElementById("grid");
+  const filters = document.getElementById("filters");
+  let active = null;
+
+  function draw() {
+    grid.innerHTML = FIELDS.filter(f => !active || f.name === active).map(renderCard).join("");
+    filters.querySelectorAll(".chip").forEach(b =>
+      b.setAttribute("aria-pressed", String((b.dataset.name || null) === active)));
+  }
+
+  filters.innerHTML = `<button class="chip" data-name="">Tất cả</button>` +
+    FIELDS.map(f => `<button class="chip" data-name="${esc(f.name)}">${f.icon} ${esc(f.name)}</button>`).join("");
+  filters.addEventListener("click", e => {
+    const b = e.target.closest(".chip");
+    if (!b) return;
+    active = b.dataset.name || null;
+    draw();
+  });
+
+  document.getElementById("updated").textContent = UPDATED;
+  draw();
+</script>
+</body>
+</html>
