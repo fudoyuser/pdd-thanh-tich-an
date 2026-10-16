@@ -180,7 +180,9 @@
       "2 bài tập giả định | Giáo trình: Quản trị rủi ro",
       "Mức độ thấu hiểu công thức CAPM: 2 điểm",
     ], subs: [
-      { name: "Môn học Thuế", items: [] },
+      { name: "Môn học Thuế", items: [
+        "Slide Tổng quan về thuế: 7.5 điểm",
+      ]},
     ]},
     { name: "Bất động sản", icon: "🏠", items: [
       "Đã trải nghiệm 3 doanh nghiệp môi giới bất động sản",
@@ -221,7 +223,7 @@
     if (pipe > -1) {
       html = `<span class="tag">${esc(text.slice(0, pipe).trim())}</span>${esc(text.slice(pipe + 1).trim())}`;
     } else {
-      const m = text.match(/^(.*):\s*(\d+\s*điểm)$/);
+      const m = text.match(/^(.*):\s*(\d+(?:[.,]\d+)?\s*điểm)$/);
       html = m ? `${esc(m[1])}: <span class="score">${esc(m[2])}</span>` : esc(text);
     }
     return `<li><span class="tick" aria-hidden="true">✓</span><span class="ach-body">${html}</span></li>`;
