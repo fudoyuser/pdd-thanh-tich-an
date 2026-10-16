@@ -182,6 +182,7 @@
     ], subs: [
       { name: "Môn học Thuế", items: [
         "Slide Tổng quan về thuế: 7.5 điểm",
+        "Slide Thuế VAT: 6.4/10",
       ]},
     ]},
     { name: "Bất động sản", icon: "🏠", items: [
@@ -223,7 +224,7 @@
     if (pipe > -1) {
       html = `<span class="tag">${esc(text.slice(0, pipe).trim())}</span>${esc(text.slice(pipe + 1).trim())}`;
     } else {
-      const m = text.match(/^(.*):\s*(\d+(?:[.,]\d+)?\s*điểm)$/);
+      const m = text.match(/^(.*):\s*(\d+(?:[.,]\d+)?\s*(?:điểm|\/\s*\d+))$/);
       html = m ? `${esc(m[1])}: <span class="score">${esc(m[2])}</span>` : esc(text);
     }
     return `<li><span class="tick" aria-hidden="true">✓</span><span class="ach-body">${html}</span></li>`;
