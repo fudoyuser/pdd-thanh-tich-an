@@ -130,6 +130,14 @@
     padding: 14px; border-radius: 10px; border: 1px dashed var(--line);
   }
 
+  .sub { margin-top: 16px; padding-top: 14px; border-top: 1px solid var(--line); }
+  .card-head + .sub { margin-top: 0; padding-top: 0; border-top: 0; }
+  .sub h3 {
+    font-size: 12.5px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase;
+    color: var(--muted); margin: 0 0 10px;
+  }
+  .sub-locked { font-size: 13px; padding: 10px 12px; }
+
   footer { margin-top: 48px; color: var(--muted); font-size: 13px; text-align: center; }
 </style>
 </head>
@@ -166,11 +174,13 @@
       "Đã hiểu cách sử dụng Claude để chạy data của phần mềm Stata",
       "Đã biết cách tư duy khoa học cho nhiều vấn đề hơn",
     ]},
-    { name: "Tài chính & Ngân hàng & Chứng khoán", icon: "💹", items: [
+    { name: "Tài chính", icon: "💹", items: [
       "2 Video | Kênh Youtube: Tài chính & Kinh doanh",
       "1 Video | Kênh Youtube: Mèo Giải Thích",
       "2 bài tập giả định | Giáo trình: Quản trị rủi ro",
       "Mức độ thấu hiểu công thức CAPM: 2 điểm",
+    ], subs: [
+      { name: "Môn học Thuế", items: [] },
     ]},
     { name: "Bất động sản", icon: "🏠", items: [
       "Đã trải nghiệm 3 doanh nghiệp môi giới bất động sản",
@@ -217,10 +227,21 @@
     return `<li><span class="tick" aria-hidden="true">✓</span><span class="ach-body">${html}</span></li>`;
   }
 
+  // Tổng thành tích của lĩnh vực, tính cả các nhánh con
+  const count = f => f.items.length + (f.subs || []).reduce((s, x) => s + x.items.length, 0);
+
+  function renderSub(s) {
+    const body = s.items.length
+      ? `<ul class="ach">${s.items.map(renderItem).join("")}</ul>`
+      : `<div class="locked-msg sub-locked">🔒 Chưa mở khóa</div>`;
+    return `<div class="sub"><h3>${esc(s.name)}</h3>${body}</div>`;
+  }
+
   function renderCard(f) {
-    const n = f.items.length;
-    const body = n
-      ? `<ul class="ach">${f.items.map(renderItem).join("")}</ul>`
+    const n = count(f);
+    const subs = (f.subs || []).map(renderSub).join("");
+    const body = n || subs
+      ? (f.items.length ? `<ul class="ach">${f.items.map(renderItem).join("")}</ul>` : "") + subs
       : `<div class="locked-msg">🔒 Chưa mở khóa thành tích nào</div>`;
     return `<article class="card${n ? "" : " locked"}">
       <div class="card-head">
@@ -229,16 +250,16 @@
       </div>${body}</article>`;
   }
 
-  const total = FIELDS.reduce((s, f) => s + f.items.length, 0);
-  const unlocked = FIELDS.filter(f => f.items.length).length;
-  const best = FIELDS.reduce((a, b) => b.items.length > a.items.length ? b : a);
+  const total = FIELDS.reduce((s, f) => s + count(f), 0);
+  const unlocked = FIELDS.filter(f => count(f)).length;
+  const best = FIELDS.reduce((a, b) => count(b) > count(a) ? b : a);
   const pct = Math.round(unlocked / FIELDS.length * 100);
 
   document.getElementById("stats").innerHTML = `
     <div class="stat"><div class="num">${total}</div><div class="lbl">Thành tích đã mở khóa</div></div>
     <div class="stat"><div class="num">${unlocked}/${FIELDS.length}</div><div class="lbl">Lĩnh vực có thành tích</div>
       <div class="progress"><span style="width:${pct}%"></span></div></div>
-    <div class="stat"><div class="num">${best.icon}</div><div class="lbl">Mạnh nhất: ${esc(best.name)} (${best.items.length})</div></div>`;
+    <div class="stat"><div class="num">${best.icon}</div><div class="lbl">Mạnh nhất: ${esc(best.name)} (${count(best)})</div></div>`;
 
   const grid = document.getElementById("grid");
   const filters = document.getElementById("filters");
