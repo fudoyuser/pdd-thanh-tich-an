@@ -157,7 +157,7 @@
 </div>
 
 <script>
-  const UPDATED = "17/10/2026";
+  const UPDATED = "18/10/2026";
 
   const FIELDS = [
     { name: "Quản lý đội nhóm", icon: "👥", items: [
@@ -193,7 +193,7 @@
       { name: "IELTS Listening", items: [] },
       { name: "IELTS Speaking", items: [] },
       { name: "IELTS Reading", items: [
-        "E-training: 1.5/9",
+        "E-training: 6.0/9.0",
       ]},
     ]},
     { name: "HR", icon: "💼", items: [
@@ -235,7 +235,7 @@
     if (pipe > -1) {
       html = `<span class="tag">${esc(text.slice(0, pipe).trim())}</span>${esc(text.slice(pipe + 1).trim())}`;
     } else {
-      const m = text.match(/^(.*):\s*(\d+(?:[.,]\d+)?\s*(?:điểm|\/\s*\d+))$/);
+      const m = text.match(/^(.*):\s*(\d+(?:[.,]\d+)?\s*(?:điểm|\/\s*\d+(?:[.,]\d+)?))$/);
       html = m ? `${esc(m[1])}: <span class="score">${esc(m[2])}</span>` : esc(text);
     }
     return `<li><span class="tick" aria-hidden="true">✓</span><span class="ach-body">${html}</span></li>`;
