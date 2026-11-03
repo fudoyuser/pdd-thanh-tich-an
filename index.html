@@ -21,6 +21,10 @@
     --gold: #a16207;
     --gold-soft: #fbf3dc;
     --locked: #a8a29e;
+    --good-ink: #15803d;
+    --good-soft: #e7f6ec;
+    --warn-ink: #b45309;
+    --warn-soft: #fdf1dc;
     --shadow: 0 1px 2px rgba(28,27,25,.05), 0 4px 16px rgba(28,27,25,.05);
     color-scheme: light;
   }
@@ -37,6 +41,10 @@
       --gold: #facc15;
       --gold-soft: #332b10;
       --locked: #6b665f;
+      --good-ink: #4ade80;
+      --good-soft: #15291c;
+      --warn-ink: #fbbf24;
+      --warn-soft: #33270f;
       --shadow: none;
       color-scheme: dark;
     }
@@ -138,6 +146,67 @@
   }
   .sub-locked { font-size: 13px; padding: 10px 12px; }
 
+  .stat .sub-lbl { color: var(--muted); font-size: 12.5px; margin-top: 2px; }
+
+  .panel {
+    display: grid; grid-template-columns: minmax(0, 1.7fr) minmax(0, 1fr);
+    gap: 16px; margin-bottom: 28px; align-items: start;
+  }
+  @media (max-width: 760px) { .panel { grid-template-columns: 1fr; } }
+  .box {
+    background: var(--surface); border: 1px solid var(--line); border-radius: 16px;
+    padding: 20px 22px; box-shadow: var(--shadow); min-width: 0;
+  }
+  .sec { font-size: 16px; font-weight: 700; margin: 0; }
+  .sec-sub { color: var(--muted); font-size: 13px; margin: 2px 0 14px; }
+
+  .chart { position: relative; }
+  .chart svg { display: block; width: 100%; overflow: visible; }
+  .chart .grid-line { stroke: var(--line); stroke-width: 1; }
+  .chart .axis { fill: var(--muted); font-size: 11px; font-family: inherit; }
+  .chart .val { fill: var(--text); font-size: 11px; font-weight: 700; font-family: inherit; }
+  .chart .bar { fill: var(--accent); }
+  .chart .hit { fill: transparent; cursor: pointer; outline: none; }
+  .chart .hit:hover + .bar, .chart .hit:focus-visible + .bar, .chart .bar.on { opacity: .75; }
+  .chart .hit:focus-visible { stroke: var(--text); stroke-width: 1; }
+  .tip {
+    position: absolute; pointer-events: none; z-index: 2; width: max-content; max-width: 260px;
+    background: var(--text); color: var(--bg); border-radius: 10px;
+    padding: 8px 11px; font-size: 12.5px; line-height: 1.45;
+    transform: translate(-50%, calc(-100% - 10px));
+  }
+  .tip strong { font-size: 15px; }
+  .tip .tip-date { opacity: .75; }
+  .chart-empty { color: var(--muted); font-size: 13px; padding: 24px 0; text-align: center; }
+
+  details.table-view { margin-top: 10px; font-size: 13px; }
+  details.table-view summary, details.hist summary { cursor: pointer; color: var(--muted); font-size: 12.5px; }
+  details.table-view table { width: 100%; border-collapse: collapse; margin-top: 8px; font-variant-numeric: tabular-nums; }
+  details.table-view th, details.table-view td { text-align: left; padding: 4px 6px; border-bottom: 1px solid var(--line); }
+  details.table-view th { color: var(--muted); font-weight: 600; }
+
+  .slow-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; max-height: 300px; overflow-y: auto; }
+  .slow-list li {
+    display: flex; align-items: center; gap: 10px;
+    background: var(--surface-2); border-radius: 10px; padding: 8px 12px; font-size: 14px;
+  }
+  .slow-list .nm { flex: 1; min-width: 0; }
+  .slow-list .nm small { display: block; color: var(--muted); font-size: 12px; }
+  .slow-list .days { font-weight: 800; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .slow-none { color: var(--muted); font-size: 14px; }
+
+  .pace {
+    font-size: 12.5px; font-weight: 600; color: var(--muted);
+    margin: -6px 0 14px; padding: 6px 10px; border-radius: 8px; background: var(--surface-2);
+  }
+  .pace.up { color: var(--good-ink); background: var(--good-soft); }
+  .pace.slow { color: var(--warn-ink); background: var(--warn-soft); }
+  details.hist { margin-top: 14px; }
+  details.hist ol { list-style: none; margin: 8px 0 0; padding: 0; display: grid; gap: 4px; font-size: 13px; }
+  details.hist li { display: flex; gap: 8px; }
+  details.hist .d { color: var(--muted); font-variant-numeric: tabular-nums; flex: none; }
+  details.hist .k { flex: none; font-size: 11px; font-weight: 700; padding: 1px 6px; border-radius: 5px; background: var(--surface-2); color: var(--muted); align-self: flex-start; margin-top: 1px; }
+
   footer { margin-top: 48px; color: var(--muted); font-size: 13px; text-align: center; }
 </style>
 </head>
@@ -151,6 +220,19 @@
 
   <section class="stats" id="stats" aria-label="Tổng quan"></section>
   <nav class="filters" id="filters" aria-label="Lọc theo lĩnh vực"></nav>
+  <section class="panel" id="progress" aria-label="Đo lường tiến bộ" hidden>
+    <div class="box">
+      <h2 class="sec">Tiến bộ hằng ngày <span id="chart-scope" style="color:var(--muted);font-weight:500"></span></h2>
+      <p class="sec-sub">Số lượt tiến bộ mỗi ngày = thành tích mới + chỉ tiêu tăng điểm.</p>
+      <div id="chart" class="chart"></div>
+      <details class="table-view"><summary>Xem dạng bảng</summary><table id="chart-table"></table></details>
+    </div>
+    <aside class="box">
+      <h2 class="sec">Lĩnh vực chậm tiến bộ</h2>
+      <p class="sec-sub">Từ 3 ngày trở lên chưa có tiến bộ, xếp theo số ngày.</p>
+      <ol id="slow" class="slow-list"></ol>
+    </aside>
+  </section>
   <main class="grid" id="grid"></main>
 
   <footer>Cập nhật lần cuối: <span id="updated"></span></footer>
@@ -264,7 +346,7 @@
     { name: "Industry Report", icon: "📊", items: [] },
   ];
 
-  const esc = s => s.replace(/[&<>"']/g, c => ({ "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#39;" }[c]));
+  const esc = s => String(s).replace(/[&<>"']/g, c => ({ "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#39;" }[c]));
 
   // "Tag | Nội dung" -> nhãn + nội dung; "...: N điểm" -> làm nổi bật điểm
   function renderItem(text) {
@@ -281,6 +363,111 @@
 
   // Tổng thành tích của lĩnh vực, tính cả các nhánh con
   const count = f => f.items.length + (f.subs || []).reduce((s, x) => s + x.items.length, 0);
+
+  // ---------- Đo lường tiến bộ ----------
+  // history.json (tạo bởi tools/build-history.mjs) giữ bản FIELDS cuối mỗi ngày;
+  // bản đang hiển thị luôn được coi là bản của hôm nay.
+  const SLOW_DAYS = 3;
+  const DAY = 86400000;
+  const toDate = s => new Date(s + "T00:00:00Z");
+  const iso = d => d.toISOString().slice(0, 10);
+  const dm = s => `${s.slice(8, 10)}/${s.slice(5, 7)}`;
+  const daysBetween = (a, b) => Math.round((toDate(b) - toDate(a)) / DAY);
+  const TODAY = new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Ho_Chi_Minh" }).format(new Date());
+
+  // Chỉ tiêu có điểm: "Tên: 7.5/10" -> {key: "Tên", a: 7.5, b: 10}; "Tên: 2 điểm" -> {a: 2, b: null}
+  const SCORE_RE = /^(.*):\s*(\d+(?:[.,]\d+)?)\s*(?:điểm|\/\s*(\d+(?:[.,]\d+)?))$/;
+  const num = s => parseFloat(s.replace(",", "."));
+  function parseItem(text, sub) {
+    const m = text.includes("|") ? null : text.match(SCORE_RE);
+    return m ? { sub, key: m[1].trim(), a: num(m[2]), b: m[3] ? num(m[3]) : null }
+             : { sub, key: text, a: null, b: null };
+  }
+  const scoreText = it => it.b != null ? `${it.a}/${it.b}` : `${it.a} điểm`;
+  const itemName = it => (it.sub ? it.sub + " › " : "") + it.key;
+
+  function snapshot(fields) {
+    const snap = new Map();
+    for (const f of fields) {
+      const items = new Map();
+      const add = (sub, list) => (list || []).forEach(t => {
+        const it = parseItem(t, sub);
+        items.set(sub + "\u0000" + it.key, it);
+      });
+      add("", f.items);
+      (f.subs || []).forEach(s => add(s.name, s.items));
+      snap.set(f.name, items);
+    }
+    return snap;
+  }
+
+  // Tăng điểm: điểm đạt được tăng, hoặc tỷ lệ điểm tăng
+  const improved = (o, n) => o.a != null && n.a != null &&
+    (n.a > o.a || (o.b && n.b && n.a / n.b > o.a / o.b));
+
+  function buildProgress(history) {
+    const days = (history?.days || []).filter(d => d.date < TODAY).concat([{ date: TODAY, fields: FIELDS }]);
+    const timeline = [];
+    const firstSeen = new Map();
+    let prev = null, i = 0;
+    for (let t = toDate(days[0].date); iso(t) <= TODAY; t = new Date(+t + DAY)) {
+      const date = iso(t);
+      let snap = prev;
+      if (days[i]?.date === date) snap = snapshot(days[i++].fields);
+      const events = [];
+      if (prev && snap !== prev) {
+        for (const [field, items] of snap) {
+          const old = prev.get(field);
+          for (const [k, it] of items) {
+            const o = old?.get(k);
+            if (!o) events.push({ field, type: "new", it });
+            else if (improved(o, it)) events.push({ field, type: "up", it, old: o });
+          }
+        }
+      }
+      for (const field of snap.keys()) if (!firstSeen.has(field)) firstSeen.set(field, date);
+      timeline.push({ date, events });
+      prev = snap;
+    }
+
+    const fields = new Map(FIELDS.map(f => {
+      const hist = timeline.map(d => ({ date: d.date, ev: d.events.filter(e => e.field === f.name) }))
+        .filter(d => d.ev.length);
+      const last = hist.at(-1)?.date || null;
+      const idle = daysBetween(last || firstSeen.get(f.name) || TODAY, TODAY);
+      const today = last === TODAY ? hist.at(-1).ev : [];
+      return [f.name, { hist, last, idle, today, since: firstSeen.get(f.name), slow: idle >= SLOW_DAYS }];
+    }));
+    return { timeline, fields };
+  }
+
+  let progress = null;
+
+  const split = ev => ({ n: ev.filter(e => e.type === "new").length, u: ev.filter(e => e.type === "up").length });
+  function splitText(ev) {
+    const { n, u } = split(ev);
+    return [n && `+${n} mới`, u && `${u} tăng điểm`].filter(Boolean).join(" · ");
+  }
+
+  function renderPace(f) {
+    if (!progress) return "";
+    const p = progress.fields.get(f.name);
+    if (p.today.length) return `<div class="pace up">📈 Hôm nay: ${splitText(p.today)}</div>`;
+    if (p.slow) return `<div class="pace slow">⚠️ Chậm tiến bộ · ${p.idle} ngày chưa có tiến bộ</div>`;
+    if (!p.last) return `<div class="pace">Chưa có tiến bộ · thêm ngày ${dm(p.since)}</div>`;
+    return `<div class="pace">Tiến bộ gần nhất: ${p.idle === 1 ? "hôm qua" : p.idle + " ngày trước"}</div>`;
+  }
+
+  function renderHist(f) {
+    const p = progress?.fields.get(f.name);
+    if (!p || !p.hist.length) return "";
+    const rows = p.hist.slice().reverse().flatMap(d => d.ev.map(e => `<li><span class="d">${dm(d.date)}</span>` +
+      (e.type === "new"
+        ? `<span class="k">Mới</span><span>${esc(itemName(e.it))}${e.it.a != null ? `: <span class="score">${esc(scoreText(e.it))}</span>` : ""}</span>`
+        : `<span class="k">Tăng</span><span>${esc(itemName(e.it))}: ${esc(scoreText(e.old))} → <span class="score">${esc(scoreText(e.it))}</span></span>`) +
+      `</li>`));
+    return `<details class="hist"><summary>Lịch sử tiến bộ (${rows.length})</summary><ol>${rows.join("")}</ol></details>`;
+  }
 
   function renderSub(s) {
     const body = s.items.length
@@ -299,26 +486,132 @@
       <div class="card-head">
         <div class="icon" aria-hidden="true">${f.icon}</div>
         <div><h2>${esc(f.name)}</h2><div class="count">${n ? n + " thành tích" : "Đang chờ mở khóa"}</div></div>
-      </div>${body}</article>`;
+      </div>${renderPace(f)}${body}${renderHist(f)}</article>`;
   }
 
-  const unlocked = FIELDS.filter(f => count(f)).length;
-  const best = FIELDS.reduce((a, b) => count(b) > count(a) ? b : a);
-  const pct = Math.round(unlocked / FIELDS.length * 100);
+  function renderStats() {
+    const unlocked = FIELDS.filter(f => count(f)).length;
+    const best = FIELDS.reduce((a, b) => count(b) > count(a) ? b : a);
+    const pct = Math.round(unlocked / FIELDS.length * 100);
+    let html = `
+      <div class="stat"><div class="num">${unlocked}/${FIELDS.length}</div><div class="lbl">Lĩnh vực có thành tích</div>
+        <div class="progress"><span style="width:${pct}%"></span></div></div>
+      <div class="stat"><div class="num">${best.icon}</div><div class="lbl">Mạnh nhất: ${esc(best.name)} (${count(best)})</div></div>`;
+    if (progress) {
+      const ev = progress.timeline.at(-1).events;
+      const slow = [...progress.fields.values()].filter(p => p.slow).length;
+      html += `
+      <div class="stat"><div class="num">${ev.length}</div><div class="lbl">Lượt tiến bộ hôm nay</div>
+        <div class="sub-lbl">${ev.length ? splitText(ev) : "Chưa có tiến bộ nào"}</div></div>
+      <div class="stat"><div class="num">${slow}</div><div class="lbl">Lĩnh vực chậm tiến bộ</div>
+        <div class="sub-lbl">≥ ${SLOW_DAYS} ngày chưa có tiến bộ</div></div>`;
+    }
+    document.getElementById("stats").innerHTML = html;
+  }
 
-  document.getElementById("stats").innerHTML = `
-    <div class="stat"><div class="num">${unlocked}/${FIELDS.length}</div><div class="lbl">Lĩnh vực có thành tích</div>
-      <div class="progress"><span style="width:${pct}%"></span></div></div>
-    <div class="stat"><div class="num">${best.icon}</div><div class="lbl">Mạnh nhất: ${esc(best.name)} (${count(best)})</div></div>`;
+  function renderSlow() {
+    const list = FIELDS.map(f => ({ f, p: progress.fields.get(f.name) }))
+      .filter(x => x.p.slow).sort((a, b) => b.p.idle - a.p.idle);
+    document.getElementById("slow").innerHTML = list.length
+      ? list.map(({ f, p }) => `<li><span aria-hidden="true">${f.icon}</span>
+          <span class="nm">${esc(f.name)}<small>${p.last ? "Tiến bộ gần nhất " + dm(p.last) : "Chưa có tiến bộ từ " + dm(p.since)}</small></span>
+          <span class="days">${p.idle} ngày</span></li>`).join("")
+      : `<li class="slow-none">🎉 Không có lĩnh vực nào chậm tiến bộ.</li>`;
+  }
+
+  // Biểu đồ cột: số lượt tiến bộ mỗi ngày (cả trang hoặc lĩnh vực đang lọc)
+  function renderChart() {
+    const box = document.getElementById("chart");
+    document.getElementById("chart-scope").textContent = active ? `· ${active}` : "· tất cả lĩnh vực";
+    const data = progress.timeline.map(d => {
+      const ev = active ? d.events.filter(e => e.field === active) : d.events;
+      return { date: d.date, ev };
+    });
+    const W = box.clientWidth || 600, H = 180, padL = 26, padB = 22, padT = 16;
+    const max = Math.max(1, ...data.map(d => d.ev.length));
+    const step = max <= 4 ? 1 : Math.ceil(max / 4);
+    const top = Math.ceil(max / step) * step;
+    const band = (W - padL) / data.length;
+    const bw = Math.max(2, Math.min(24, band - 2));
+    const y = v => padT + (H - padT - padB) * (1 - v / top);
+    const every = Math.max(1, Math.ceil(44 / band));
+    const peak = data.reduce((a, b) => b.ev.length > a.ev.length ? b : a);
+
+    let svg = "";
+    for (let v = 0; v <= top; v += step)
+      svg += `<line class="grid-line" x1="${padL}" x2="${W}" y1="${y(v)}" y2="${y(v)}"/>
+        <text class="axis" x="${padL - 6}" y="${y(v) + 4}" text-anchor="end">${v}</text>`;
+    data.forEach((d, i) => {
+      const cx = padL + band * (i + .5), v = d.ev.length;
+      const x0 = cx - bw / 2, y0 = y(0), y1 = y(v), r = Math.min(4, bw / 2, y0 - y1);
+      const bar = v ? `<path class="bar" d="M${x0},${y0}V${y1 + r}Q${x0},${y1} ${x0 + r},${y1}H${x0 + bw - r}Q${x0 + bw},${y1} ${x0 + bw},${y1 + r}V${y0}Z"/>` : `<path class="bar"/>`;
+      svg += `<rect class="hit" data-i="${i}" tabindex="0" x="${padL + band * i}" y="${padT}" width="${band}" height="${H - padT - padB}"
+        aria-label="${dm(d.date)}: ${v} lượt tiến bộ"/>${bar}`;
+      if (d === peak && v) svg += `<text class="val" x="${cx}" y="${y1 - 5}" text-anchor="middle">${v}</text>`;
+      const isLast = i === data.length - 1;
+      if (isLast || (i % every === 0 && data.length - 1 - i >= every))
+        svg += `<text class="axis" x="${cx}" y="${H - 6}" text-anchor="middle">${isLast ? "Hôm nay" : dm(d.date)}</text>`;
+    });
+    box.innerHTML = `<svg viewBox="0 0 ${W} ${H}" height="${H}" role="img" aria-label="Biểu đồ số lượt tiến bộ mỗi ngày">${svg}</svg><div class="tip" hidden></div>`;
+
+    const tip = box.querySelector(".tip");
+    const show = el => {
+      const d = data[el.dataset.i];
+      box.querySelectorAll(".bar.on").forEach(b => b.classList.remove("on"));
+      el.nextElementSibling.classList.add("on");
+      tip.replaceChildren();
+      const head = document.createElement("div");
+      const strong = document.createElement("strong");
+      strong.textContent = `${d.ev.length} lượt`;
+      const date = document.createElement("span");
+      date.className = "tip-date";
+      date.textContent = ` · ${dm(d.date)}`;
+      head.append(strong, date);
+      tip.append(head);
+      if (d.ev.length) {
+        const s = document.createElement("div");
+        s.textContent = splitText(d.ev);
+        tip.append(s);
+        if (!active) {
+          const names = [...new Set(d.ev.map(e => e.field))];
+          const f = document.createElement("div");
+          f.className = "tip-date";
+          f.textContent = names.join(", ");
+          tip.append(f);
+        }
+      }
+      const r = el.getBoundingClientRect(), b = box.getBoundingClientRect();
+      tip.hidden = false;
+      const half = tip.offsetWidth / 2;
+      tip.style.left = Math.min(Math.max(r.left - b.left + r.width / 2, half), b.width - half) + "px";
+      tip.style.top = (y(d.ev.length) * b.height / H) + "px";
+    };
+    const hide = () => { tip.hidden = true; box.querySelectorAll(".bar.on").forEach(b => b.classList.remove("on")); };
+    box.querySelectorAll(".hit").forEach(el => {
+      el.addEventListener("pointerenter", () => show(el));
+      el.addEventListener("focus", () => show(el));
+      el.addEventListener("blur", hide);
+    });
+    box.querySelector("svg").addEventListener("pointerleave", hide);
+
+    document.getElementById("chart-table").innerHTML =
+      `<thead><tr><th>Ngày</th><th>Lượt</th><th>Mới</th><th>Tăng điểm</th></tr></thead><tbody>` +
+      data.slice().reverse().map(d => { const s = split(d.ev);
+        return `<tr><td>${dm(d.date)}</td><td>${d.ev.length}</td><td>${s.n}</td><td>${s.u}</td></tr>`; }).join("") +
+      `</tbody>`;
+  }
 
   const grid = document.getElementById("grid");
   const filters = document.getElementById("filters");
   let active = null;
 
   function draw() {
+    renderStats();
     grid.innerHTML = FIELDS.filter(f => !active || f.name === active).map(renderCard).join("");
     filters.querySelectorAll(".chip").forEach(b =>
       b.setAttribute("aria-pressed", String((b.dataset.name || null) === active)));
+    document.getElementById("progress").hidden = !progress;
+    if (progress) { renderChart(); renderSlow(); }
   }
 
   filters.innerHTML = `<button class="chip" data-name="">Tất cả</button>` +
@@ -332,6 +625,19 @@
 
   document.getElementById("updated").textContent = UPDATED;
   draw();
+
+  fetch("history.json", { cache: "no-cache" })
+    .then(r => r.ok ? r.json() : null)
+    .catch(() => null)
+    .then(h => {
+      if (!h) return;
+      progress = buildProgress(h);
+      draw();
+      let w = 0;
+      new ResizeObserver(([e]) => {
+        if (Math.abs(e.contentRect.width - w) > 1) { w = e.contentRect.width; renderChart(); }
+      }).observe(document.getElementById("chart"));
+    });
 </script>
 </body>
 </html>
