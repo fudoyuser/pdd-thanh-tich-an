@@ -315,6 +315,9 @@
     ]},
     { name: "Ngân hàng Nhà nước", icon: "🏦", items: [] },
     { name: "Giao thông Việt Nam", icon: "🚦", items: [] },
+    { name: "Báo cáo chuyên đề doanh nghiệp", icon: "📑", items: [
+      "ABBank chi nhánh Láng Hạ: 0/50 trang",
+    ]},
     { name: "Ý tưởng khởi nghiệp", icon: "💡", items: [
       "Hiểu sơ sơ | CBAM",
     ]},
@@ -356,7 +359,7 @@
     if (pipe > -1) {
       html = `<span class="tag">${esc(text.slice(0, pipe).trim())}</span>${esc(text.slice(pipe + 1).trim())}`;
     } else {
-      const m = text.match(/^(.*):\s*(\d+(?:[.,]\d+)?\s*(?:điểm|\/\s*\d+(?:[.,]\d+)?))$/);
+      const m = text.match(/^(.*):\s*(\d+(?:[.,]\d+)?\s*(?:điểm|\/\s*\d+(?:[.,]\d+)?(?:\s+\p{L}+)?))$/u);
       html = m ? `${esc(m[1])}: <span class="score">${esc(m[2])}</span>` : esc(text);
     }
     return `<li><span class="tick" aria-hidden="true">✓</span><span class="ach-body">${html}</span></li>`;
@@ -376,15 +379,16 @@
   const daysBetween = (a, b) => Math.round((toDate(b) - toDate(a)) / DAY);
   const TODAY = new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Ho_Chi_Minh" }).format(new Date());
 
-  // Chỉ tiêu có điểm: "Tên: 7.5/10" -> {key: "Tên", a: 7.5, b: 10}; "Tên: 2 điểm" -> {a: 2, b: null}
-  const SCORE_RE = /^(.*):\s*(\d+(?:[.,]\d+)?)\s*(?:điểm|\/\s*(\d+(?:[.,]\d+)?))$/;
+  // Chỉ tiêu có điểm: "Tên: 7.5/10" -> {key: "Tên", a: 7.5, b: 10}; "Tên: 2 điểm" -> {a: 2, b: null};
+  // có thể kèm đơn vị: "Tên: 0/50 trang" -> {a: 0, b: 50, unit: "trang"}
+  const SCORE_RE = /^(.*):\s*(\d+(?:[.,]\d+)?)\s*(?:điểm|\/\s*(\d+(?:[.,]\d+)?)(?:\s+(\p{L}+))?)$/u;
   const num = s => parseFloat(s.replace(",", "."));
   function parseItem(text, sub) {
     const m = text.includes("|") ? null : text.match(SCORE_RE);
-    return m ? { sub, key: m[1].trim(), a: num(m[2]), b: m[3] ? num(m[3]) : null }
+    return m ? { sub, key: m[1].trim(), a: num(m[2]), b: m[3] ? num(m[3]) : null, unit: m[4] || "" }
              : { sub, key: text, a: null, b: null };
   }
-  const scoreText = it => it.b != null ? `${it.a}/${it.b}` : `${it.a} điểm`;
+  const scoreText = it => it.b != null ? `${it.a}/${it.b}${it.unit ? " " + it.unit : ""}` : `${it.a} điểm`;
   const itemName = it => (it.sub ? it.sub + " › " : "") + it.key;
 
   function snapshot(fields) {
